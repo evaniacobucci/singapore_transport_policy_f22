@@ -17,6 +17,10 @@ These include the following files:
 - Test1000rot.crd - Modified version of Test1000.crd containing only the two sets of rotated coordinates and a set of labels for each, uppercase for the control and lowercase for the treatment. (Open this in the viewer to see the treatment and control groups simultaneously, and therefore the effects of the intervention)
 - test1000.prt - Printout of the full Galileo analysis, including descriptive statistics for each pair comparison, means matrices, coordinates, rotated coordinates, warp factors, distances moved by each concept in space, and vector correlations for each concept across both conditions.
 
+Note that the file extensions are for organization only.
+Each file needs to be opened in a text editor with a non-proportional font in order to display properly.
+On the Mac we prefer [BBEdit](https://www.barebones.com/products/bbedit/), but you can use your favorite text editor.
+
 ## Software to Replicate Analysis
 The programs necessary to replicate the analysis are in the folder /galileo/RUNNER.
 These are designed to be run in Unix-like operating systems, but have only been tested on macOS via the Terminal.
