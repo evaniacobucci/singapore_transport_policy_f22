@@ -1,0 +1,17 @@
+
+# This script checks some distributions. In short, it was a way to plot some key comparisons visually so we could see where it made sense to set the cutoff point in the Galileo analysis. (You need to have the data loaded from the .Rmd)
+
+table(control$`3.) Do you have regular access to a car?`)
+
+no_car_control <- filter(control, `3.) Do you have regular access to a car?`=="No")
+
+control_snip <- filter(control, `0218   9-17  Car and Yourself`<=499)
+# plot(table(control$`0218   9-17  Car and Yourself`))
+plot(table(as.numeric(control$`0708  72-80  Vehicle Quota (VQS) and Registration Fee (ARF)`)))
+plot(table(as.numeric(control$`0709   9-17  Vehicle Quota (VQS) and Road Pricing (ERP)`)))
+plot(table(as.numeric(control$`0717   9-17  Vehicle Quota (VQS) and Traffic congestion`)))
+plot(table(as.numeric(control$`0809  27-35  Registration Fee (ARF) and Road Pricing (ERP)`)))
+plot(table(as.numeric(control$`0817  27-35  Registration Fee (ARF) and Traffic congestion`)))
+plot(table(as.numeric(control$`0917  36-44  Road Pricing (ERP) and Traffic congestion`)))
+# These should converge because of Hebb's law... they've been discussed together. We can't make targeted messages until we have data (which we do now).
+

@@ -1,0 +1,151 @@
+---
+title: "Initial Analysis"
+author: "Evan Iacobucci"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library("tidyverse")
+library("compareGroups")
+
+```
+
+```{r get data}
+control <- read_csv("./data/control.csv")
+treatment <- read_csv("./data/treatment.csv")
+```
+
+```{r clean up data}
+
+# Create new variable to denote groups once they're bound together
+control$Group <- "Control"
+treatment$Group <- "Treatment"
+
+# Check to make sure that the names will match when the two dataframes are bound together:
+names_control <- names(control)
+names_treatment <- names(treatment)
+different_names <- setdiff(names_control, names_treatment) # Shows what is in the first that isn't in the second
+different_names
+
+# OK, the names are too different to just rbind() them at the moment. There are differences in capitalization, etc. But, if they actually are the same columns, then I can just copy and paste the names from one to the other and it won't make any difference, then I can combine them. They ARE both the same length... 166 variables.
+
+vertical_names <- cbind(names_control, names_treatment)
+View(vertical_names)
+
+# They appear to be the same, just orthographic differences. This means we can just use the names from one set for both:
+names(treatment) <- names(control)
+
+# Now stick them together into the full dataset
+full_sample <- rbind(control, treatment)
+
+
+
+# Renaming some variables manually, for accuracy and matching:
+
+# What are the variable names we need to include in the comparison table? (So I can write them in the compareGroups statement)
+names(full_sample[155:167])
+
+# Fix the name for question 11 (a \t got in there!)
+colnames(full_sample)[165] <- "11.) Do you identify as" # The brackets need to be outside the parentheses
+
+
+# Fixing responses to be the same, e.g., capitalization, etc.
+# There are few enough that it's fine to just do it manually
+full_sample$`4.) How often do you use mass rapid transit as a mode of transportation?`[which(full_sample$`4.) How often do you use mass rapid transit as a mode of transportation?`=="Almost All the Time")] <- "Almost all the time"
+full_sample$`5.) How often do you use a car as a mode of transportation?`[which(full_sample$`5.) How often do you use a car as a mode of transportation?`=="Almost All the Time")] <- "Almost all the time"
+full_sample$`6.) How often do you use a bus as a mode of transportation?`[which(full_sample$`6.) How often do you use a bus as a mode of transportation?`=="Almost All the Time")] <- "Almost all the time"
+full_sample$`8.) How often do you use walking as a mode of transportation?`[which(full_sample$`8.) How often do you use walking as a mode of transportation?`=="Almost All the Time")] <- "Almost all the time"
+full_sample$`11.) Do you identify as`[which(full_sample$`11.) Do you identify as`=="Female/woman")] <- "Female/Woman"
+full_sample$`11.) Do you identify as`[which(full_sample$`11.) Do you identify as`=="Male/man")] <- "Male/Man"
+
+# Fix ages that were written out instead of numeric
+full_sample$`9.) What is your age in years?` <- replace(full_sample$`9.) What is your age in years?`, full_sample$`9.) What is your age in years?`=="22 years", 22)
+full_sample$`9.) What is your age in years?` <- replace(full_sample$`9.) What is your age in years?`, full_sample$`9.) What is your age in years?`=="22 years old", 22)
+
+# Clean up a few final non-matching responses
+full_sample$`12.) Which best describes your race/ethnicity?` <- replace(full_sample$`12.) Which best describes your race/ethnicity?`, full_sample$`12.) Which best describes your race/ethnicity?`=="filipino", "Filipino")
+full_sample$`12.) Which best describes your race/ethnicity?` <- replace(full_sample$`12.) Which best describes your race/ethnicity?`, full_sample$`12.) Which best describes your race/ethnicity?`=="Option 4", "Other")
+
+# Make the group variable a factor for comparison purposes
+full_sample$Group <- as_factor(full_sample$Group)
+
+
+# Reorder the frequency questions so they appear in the table in a way that makes sense
+
+# Convert them to factors so we can reorder. (I didn't reorder the race/ethnicity so the unused levels don't show up in the descriptive table)
+full_sample[155:165] <- lapply(full_sample[155:165], as_factor) 
+
+# Add additional level to those missing a level (e.g., some people never picked "never")
+levels(full_sample$`4.) How often do you use mass rapid transit as a mode of transportation?`) <- c(levels(full_sample$`4.) How often do you use mass rapid transit as a mode of transportation?`), "Never")
+levels(full_sample$`6.) How often do you use a bus as a mode of transportation?`) <- c(levels(full_sample$`6.) How often do you use a bus as a mode of transportation?`), "Never")
+levels(full_sample$`7.) How often do you use a bicycle as a mode of transportation?`) <- c(levels(full_sample$`7.) How often do you use a bicycle as a mode of transportation?`), "Almost all the time")
+levels(full_sample$`8.) How often do you use walking as a mode of transportation?`) <- c(levels(full_sample$`8.) How often do you use walking as a mode of transportation?`), "Never")
+
+# Specify the order of the levels (there are only four questions, so I'll just rewrite them):
+full_sample$`4.) How often do you use mass rapid transit as a mode of transportation?` <- fct_relevel(full_sample$`4.) How often do you use mass rapid transit as a mode of transportation?`, c("Never", "Seldom", "Often", "Very Often", "Almost all the time")) 
+full_sample$`5.) How often do you use a car as a mode of transportation?` <- fct_relevel(full_sample$`5.) How often do you use a car as a mode of transportation?`, c("Never", "Seldom", "Often", "Very Often", "Almost all the time")) 
+full_sample$`6.) How often do you use a bus as a mode of transportation?` <- fct_relevel(full_sample$`6.) How often do you use a bus as a mode of transportation?`, c("Never", "Seldom", "Often", "Very Often", "Almost all the time")) 
+full_sample$`7.) How often do you use a bicycle as a mode of transportation?` <- fct_relevel(full_sample$`7.) How often do you use a bicycle as a mode of transportation?`, c("Never", "Seldom", "Often", "Very Often", "Almost all the time")) 
+full_sample$`8.) How often do you use walking as a mode of transportation?` <- fct_relevel(full_sample$`8.) How often do you use walking as a mode of transportation?`, c("Never", "Seldom", "Often", "Very Often", "Almost all the time")) 
+
+
+# Age should be numeric
+full_sample$`9.) What is your age in years?` <- as.character(full_sample$`9.) What is your age in years?`) # This makes it so that the as.numeric() below takes the number for age. Otherwise, it takes the factor level assigned in the above code.
+full_sample$`9.) What is your age in years?` <- as.numeric(full_sample$`9.) What is your age in years?`)
+
+
+# Reduce the race/ethnicity categories (There were not enough specific non-Chinese-identifying respondents to preserve additional granularity in the categories)
+full_sample$`12.) Which best describes your race/ethnicity?`[full_sample$`12.) Which best describes your race/ethnicity?`!="Chinese"] <- "Other"
+```
+
+```{r descriptive comparisons}
+# Comparing the demographic/behavioral questions at the end of the questionnaire, both for descriptive analysis and to show balanced groups
+
+sample_comparison <- compareGroups(Group ~ `1.) Do you have a driving license?` + `2.) Do you own a car?` + `3.) Do you have regular access to a car?` + `4.) How often do you use mass rapid transit as a mode of transportation?` + `5.) How often do you use a car as a mode of transportation?` + `6.) How often do you use a bus as a mode of transportation?` + `7.) How often do you use a bicycle as a mode of transportation?` + `8.) How often do you use walking as a mode of transportation?` + `9.) What is your age in years?` + `10.) What is your approximate annual income in Singapore dollars?` + `11.) Do you identify as` + `12.) Which best describes your race/ethnicity?`, data = full_sample, max.xlev = 30, byrow = FALSE, simplify = FALSE) # "simplify = FALSE" is the argument to tell it to still print factor levels with no obs
+
+# The income question falls out in the above call because it was a blank where people wrote wherever they wanted, but it ended up being not particularly relevant, anyway, because this is a student population. We could go back and sort it later if we really think it matters, but I don't.
+
+# Create table
+sample_comparison_table <- createTable(sample_comparison)
+
+# Print markdown table when knitting
+export2md(sample_comparison_table, file = 'sample_comparison_table.md', caption = "Group Comparison")
+
+# Export Excel table for insertion into document
+export2xls(sample_comparison_table, file='./output/sample_comparison.xlsx', which.table="descr", nmax=TRUE, header.labels=c())
+```
+
+
+
+```{r figure for policy differences}
+deltas <- read_csv("./data/deltas.csv") # Read in table of differences between control and treatment for policy concepts (This is a subset made from the Galileo output)
+
+deltas_long <- gather(deltas, key="Group", value="Mean Distance", c("Control", "Treatment"))
+deltas_long$Change <- NULL # This doesn't make sense here, anymore, and I can get it back by subtracting
+
+deltas_long$Concept <- factor(deltas_long$Concept, levels = deltas_long$Concept[1:18]) # This keeps them in the right order when plotted, otherwise ggplot will arrange them alphabetically
+
+deltas_long$Policy <- factor(deltas_long$Policy, levels = unique(deltas_long$Policy))
+
+deltas_plot <- ggplot(deltas_long, aes(x = Concept, y = `Mean Distance`, fill = Group))+
+  geom_bar(position = "dodge", stat = 'identity') + # Need position = "dodge" because the default makes them stacked
+  facet_wrap(~Policy, ncol = 1) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1), legend.position = "top")
+
+ggsave(
+  "figure3.png",
+  plot = deltas_plot,
+  device = NULL,
+  path = "./figs",
+  scale = 1,
+  width = 7,
+  height = 7,
+  units = "in",
+  dpi = 600,
+  limitsize = TRUE,
+  bg = NULL
+)
+```

@@ -21,6 +21,10 @@ Note that the file extensions are for organization only.
 Each file needs to be opened in a text editor with a non-proportional font in order to display properly.
 On the Mac we prefer [BBEdit](https://www.barebones.com/products/bbedit/), but you can use your favorite text editor.
 
+Additionally, the materials used to process the demographic and behavioral variables in the study, as well as to generate some figures, were performed in R.
+Materials for this portion of the analysis, including the R Markdown script and outputs, are in the folder called "Singapore Playground", which is what the R Project was named.
+
+
 ## Software to Replicate Analysis
 The programs necessary to replicate the analysis are in the folder /galileo/RUNNER.
 These are designed to be run in Unix-like operating systems, but have only been tested on macOS via the Terminal.
